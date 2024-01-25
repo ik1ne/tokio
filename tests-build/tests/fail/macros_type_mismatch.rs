@@ -12,14 +12,6 @@ async fn missing_return_type() {
 
 #[tokio::main]
 async fn extra_semicolon() -> Result<(), ()> {
-    /* TODO(taiki-e): help message still wrong
-    help: try using a variant of the expected enum
-       |
-    23 |     Ok(Ok(());)
-       |
-    23 |     Err(Ok(());)
-       |
-    */
     Ok(());
 }
 
@@ -30,6 +22,12 @@ async fn extra_semicolon() -> Result<(), ()> {
 async fn issue_4635() {
     return 1;
     ;
+}
+
+#[tokio::main]
+async fn extra_semicolon_with_try_operator() -> Result<(), ()> {
+    Ok(())?;
+    Ok(());
 }
 
 fn main() {}
