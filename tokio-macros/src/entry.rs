@@ -381,6 +381,15 @@ fn parse_knobs(mut input: ItemFn, is_test: bool, config: FinalConfig) -> TokenSt
     };
 
     let body = input.body();
+    let unique_fn_name = Ident::new("__tokio_internal_async_body", Span::mixed_site());
+    let generics = &input.sig.generics;
+    let output_type = match &input.sig.output {
+        // For functions with no return value syn doesn't print anything,
+        // but that doesn't work as `Output` for our boxed `Future`, so
+        // default to `()` (the same type as the function output).
+        syn::ReturnType::Default => quote! { () },
+        syn::ReturnType::Type(_, ret_type) => quote! { #ret_type },
+    };
 
     // For test functions pin the body to the stack and use `Pin<&mut dyn
     // Future>` to reduce the amount of `Runtime::block_on` (and related
@@ -392,21 +401,16 @@ fn parse_knobs(mut input: ItemFn, is_test: bool, config: FinalConfig) -> TokenSt
     // We don't do this for the main function as it should only be used once so
     // there will be no benefit.
     let body = if is_test {
-        let output_type = match &input.sig.output {
-            // For functions with no return value syn doesn't print anything,
-            // but that doesn't work as `Output` for our boxed `Future`, so
-            // default to `()` (the same type as the function output).
-            syn::ReturnType::Default => quote! { () },
-            syn::ReturnType::Type(_, ret_type) => quote! { #ret_type },
-        };
         quote! {
-            let body = async #body;
+            async fn #unique_fn_name #generics () -> #output_type #body
+            let body = #unique_fn_name();
             #crate_path::pin!(body);
             let body: ::core::pin::Pin<&mut dyn ::core::future::Future<Output = #output_type>> = body;
         }
     } else {
         quote! {
-            let body = async #body;
+            async fn #unique_fn_name #generics () -> #output_type #body
+            let body = #unique_fn_name();
         }
     };
 
