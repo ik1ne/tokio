@@ -30,4 +30,9 @@ async fn extra_semicolon_with_try_operator() -> Result<(), ()> {
     Ok(());
 }
 
+#[tokio::main]
+async fn returns_different_type() -> usize {
+    return "hello world";
+}
+
 fn main() {}

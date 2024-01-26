@@ -32,8 +32,8 @@ error[E0308]: mismatched types
 error[E0308]: mismatched types
   --> tests/fail/macros_type_mismatch.rs:23:12
    |
-22 | async fn issue_4635() {
-   |                      - help: try adding a return type: `-> i32`
+22 | async fn issue_4635() -> () {
+   |                          -- expected `()` because of return type
 23 |     return 1;
    |            ^ expected `()`, found integer
 
@@ -50,3 +50,11 @@ error[E0308]: mismatched types
    |
    = note:   expected enum `Result<(), ()>`
            found unit type `()`
+
+error[E0308]: mismatched types
+  --> tests/fail/macros_type_mismatch.rs:35:12
+   |
+34 | async fn returns_different_type() -> usize {
+   |                                      ----- expected `usize` because of return type
+35 |     return "hello world"
+   |            ^^^^^^^^^^^^^ expected `usize`, found `&str`
